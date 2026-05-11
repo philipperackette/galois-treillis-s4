@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Treillis complet des sous-groupes de S4</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --text: #182033;
+      --muted: #667085;
+      --border: #d0d5dd;
+      --primary: #1d4ed8;
+      --primary-soft: #dbeafe;
+      --normal: #172554;
+      --normal-fill: #eef2ff;
+      --edge: #1f2937;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #e0edff 0, transparent 38%), var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 30px 22px 16px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(2rem, 4vw, 3.1rem);
+      line-height: 1.04;
+      letter-spacing: -0.045em;
+    }
+
+    .subtitle {
+      margin: 0;
+      max-width: 1040px;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 1.04rem;
+    }
+
+    main {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 16px 22px 40px;
+      display: grid;
+      grid-template-columns: 1.45fr 0.55fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 1100px) {
+      main { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.94);
+      border: 1px solid rgba(208, 213, 221, 0.85);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      backdrop-filter: blur(8px);
+    }
+
+    .card h2 {
+      margin: 0 0 14px;
+      font-size: 1.22rem;
+      letter-spacing: -0.02em;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    button, select {
+      height: 40px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 0 14px;
+      font-size: 1rem;
+      background: #fff;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 800;
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2);
+      transition: transform 0.12s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button.secondary { background: #eef2ff; color: #3730a3; box-shadow: none; }
+    button.ghost { background: #f2f4f7; color: #344054; box-shadow: none; }
+
+    .hint, .definition {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 5px solid var(--primary);
+      padding: 12px 14px;
+      border-radius: 12px;
+      color: #475467;
+      line-height: 1.48;
+      margin-bottom: 14px;
+    }
+
+    .definition {
+      border-left-color: #16a34a;
+      margin-top: 12px;
+      margin-bottom: 0;
+    }
+
+    .workspace {
+      background: linear-gradient(180deg, #ffffff, #f8fafc);
+      border: 1px solid #e4e7ec;
+      border-radius: 18px;
+      overflow: auto;
+      padding: 10px;
+    }
+
+    svg {
+      width: 100%;
+      min-width: 1180px;
+      height: 760px;
+      display: block;
+      user-select: none;
+    }
+
+    .edge { stroke: var(--edge); stroke-width: 1.8; opacity: 0.42; }
+    .edge.noncover { stroke-dasharray: 6 6; opacity: 0.22; }
+    .edge.highlight { stroke: var(--primary); stroke-width: 4; opacity: 1; }
+    .edge.hidden { display: none; }
+
+    .node rect {
+      fill: #fff;
+      stroke: #98a2b3;
+      stroke-width: 1.4;
+      rx: 9;
+      filter: drop-shadow(0 6px 10px rgba(15, 23, 42, 0.08));
+    }
+
+    .node.normal rect { fill: var(--normal-fill); stroke: var(--normal); stroke-width: 3; }
+    .node.selected rect { fill: #dbeafe; stroke: #2563eb; stroke-width: 4; }
+    .node.dim { opacity: 0.18; }
+    .node.hidden { display: none; }
+
+    .node text {
+      pointer-events: none;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      fill: #111827;
+      font-weight: 800;
+    }
+
+    .node .label-main {
+      font-size: 15px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-style: italic;
+    }
+
+    .node .label-sub {
+      font-size: 12px;
+      fill: #344054;
+      font-weight: 700;
+      font-style: normal;
+      font-family: system-ui, sans-serif;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+      color: #475467;
+      font-size: 0.94rem;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid #e4e7ec;
+      background: #fff;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-weight: 700;
+    }
+
+    .swatch { width: 18px; height: 14px; border-radius: 4px; border: 2px solid #98a2b3; display: inline-block; }
+    .swatch.normal { background: var(--normal-fill); border-color: var(--normal); }
+    .swatch.selected { background: #dbeafe; border-color: #2563eb; }
+
+    .result-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+
+    .result-box {
+      border: 1px solid #e4e7ec;
+      border-radius: 16px;
+      background: #fff;
+      padding: 15px;
+    }
+
+    .result-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      font-weight: 850;
+      color: #344054;
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 4px 9px;
+      font-size: 0.82rem;
+      font-weight: 850;
+      background: #f2f4f7;
+      color: #475467;
+      border: 1px solid #e4e7ec;
+      white-space: nowrap;
+    }
+
+    .badge.normal { background: #eef2ff; color: #172554; border-color: #c7d2fe; }
+    .badge.warn { background: #fff7ed; color: #9a3412; border-color: #fed7aa; }
+    .badge.green { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+
+    .math {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 1.02rem;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+    }
+
+    .formula {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.12rem;
+      font-style: italic;
+    }
+
+    .small { color: #667085; font-size: 0.92rem; line-height: 1.45; }
+
+    .table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.94rem; }
+    .table th, .table td { border: 1px solid #e4e7ec; padding: 7px; text-align: left; vertical-align: top; }
+    .table th { background: #f8fafc; color: #475467; }
+
+    .chip-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .chip {
+      border: 1px solid #e4e7ec;
+      background: #f8fafc;
+      border-radius: 999px;
+      padding: 5px 8px;
+      font-size: 0.85rem;
+      font-weight: 750;
+      cursor: pointer;
+    }
+    .chip:hover { background: #eef2ff; }
+
+    .footer-note {
+      max-width: 1440px;
+      margin: -18px auto 36px;
+      padding: 0 22px;
+      color: #667085;
+      font-size: 0.94rem;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Treillis complet des sous-groupes de S₄</h1>
+    <p class="subtitle">
+      Cette applet construit automatiquement les 30 sous-groupes de S₄ à partir des permutations, puis dessine le treillis de Hasse complet. Les sous-groupes distingués sont encadrés en bleu foncé.
+    </p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>1. Treillis complet</h2>
+      <div class="controls">
+        <button id="resetBtn" class="secondary">Vue complète</button>
+        <button id="normalBtn" class="ghost">Montrer les distingués</button>
+        <button id="maximalBtn" class="ghost">Sous-groupes maximaux</button>
+        <button id="allEdgesBtn" class="ghost">Toutes les inclusions</button>
+        <select id="orderFilter">
+          <option value="all">Tous les ordres</option>
+        </select>
+      </div>
+
+      <div class="hint" id="hint">
+        Clique sur un sous-groupe pour voir son ordre, son indice, ses générateurs, ses éléments, ses inclusions immédiates et le quotient éventuel.
+      </div>
+
+      <div class="workspace">
+        <svg id="svg" viewBox="0 0 1200 760" aria-label="Treillis complet des sous-groupes de S4"></svg>
+      </div>
+
+      <div class="legend">
+        <span class="legend-item"><span class="swatch normal"></span> sous-groupe distingué dans S₄</span>
+        <span class="legend-item"><span class="swatch"></span> sous-groupe non distingué</span>
+        <span class="legend-item"><span class="swatch selected"></span> sous-groupe sélectionné</span>
+        <span class="legend-item">ligne pointillée : inclusion non immédiate</span>
+      </div>
+
+      <div class="definition">
+        <strong>Lecture.</strong> En mode Hasse, une arête montante H—K signifie que H est contenu dans K et qu’il n’existe aucun sous-groupe strictement intermédiaire. En mode “toutes les inclusions”, les inclusions non immédiates sont ajoutées en pointillés. Le treillis complet de S₄ contient 30 sous-groupes : 1 trivial, 9 d’ordre 2, 4 d’ordre 3, 7 d’ordre 4, 4 d’ordre 6, 3 d’ordre 8, A₄ d’ordre 12 et S₄.
+      </div>
+    </section>
+
+    <aside class="card">
+      <h2>2. Informations</h2>
+      <div class="result-grid">
+        <div class="result-box">
+          <div class="result-title">S₄ <span class="badge">ordre 24</span></div>
+          <div class="math">S₄ = groupe des permutations de {1,2,3,4}</div>
+          <p class="small">La construction interne énumère les permutations, engendre les sous-groupes par clôture, puis calcule les inclusions minimales.</p>
+        </div>
+
+        <div class="result-box">
+          <div class="result-title">Sous-groupe sélectionné <span class="badge" id="selectedBadge">aucun</span></div>
+          <div class="math" id="selectedTitle">Clique sur une boîte.</div>
+          <table class="table" id="selectedTable"></table>
+        </div>
+
+        <div class="result-box">
+          <div class="result-title">Sous-groupes distingués <span class="badge normal" id="normalCount">—</span></div>
+          <div class="chip-list" id="normalList"></div>
+          <p class="small">Dans S₄, les sous-groupes distingués sont {e}, V₄, A₄ et S₄.</p>
+        </div>
+
+        <div class="result-box">
+          <div class="result-title">Répartition par ordre</div>
+          <div class="math" id="orderStats">—</div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <p class="footer-note">
+    Cette page est volontairement dédiée à S₄ : le treillis complet est beaucoup plus dense que ceux de S₃ ou A₄, et mérite une visualisation séparée.
+  </p>
+
+  <script>
+    const svg = document.getElementById('svg');
+    const resetBtn = document.getElementById('resetBtn');
+    const normalBtn = document.getElementById('normalBtn');
+    const maximalBtn = document.getElementById('maximalBtn');
+    const allEdgesBtn = document.getElementById('allEdgesBtn');
+    const orderFilter = document.getElementById('orderFilter');
+    const hint = document.getElementById('hint');
+    const selectedBadge = document.getElementById('selectedBadge');
+    const selectedTitle = document.getElementById('selectedTitle');
+    const selectedTable = document.getElementById('selectedTable');
+    const normalCount = document.getElementById('normalCount');
+    const normalList = document.getElementById('normalList');
+    const orderStats = document.getElementById('orderStats');
+
+    let subgroups = [];
+    let covers = [];
+    let selectedId = null;
+    let mode = 'all';
+    let orderMode = 'all';
+    let edgeMode = 'hasse';
+
+    function permToKey(p) { return p.join(''); }
+    function keyToPerm(k) { return k.split('').map(Number); }
+
+    function compose(p, q) {
+      // p∘q : appliquer q puis p.
+      return q.map(x => p[x - 1]);
+    }
+
+    function inverse(p) {
+      const inv = Array(p.length);
+      p.forEach((x, i) => inv[x - 1] = i + 1);
+      return inv;
+    }
+
+    function allPermutations(arr) {
+      if (arr.length === 0) return [[]];
+      const out = [];
+      for (let i = 0; i < arr.length; i++) {
+        const rest = arr.slice(0, i).concat(arr.slice(i + 1));
+        for (const p of allPermutations(rest)) out.push([arr[i], ...p]);
+      }
+      return out;
+    }
+
+    const ALL = allPermutations([1,2,3,4]);
+    const ID = '1234';
+
+    function cycles(p) {
+      const seen = Array(5).fill(false);
+      const cs = [];
+      for (let i = 1; i <= 4; i++) {
+        if (!seen[i]) {
+          let x = i;
+          const c = [];
+          while (!seen[x]) {
+            seen[x] = true;
+            c.push(x);
+            x = p[x - 1];
+          }
+          if (c.length > 1) cs.push(c);
+        }
+      }
+      return cs.length ? cs.map(c => '(' + c.join('') + ')').join('') : 'e';
+    }
+
+    function sign(p) {
+      let inv = 0;
+      for (let i = 0; i < p.length; i++) for (let j = i + 1; j < p.length; j++) if (p[i] > p[j]) inv++;
+      return inv % 2 === 0 ? 1 : -1;
+    }
+
+    function closure(gens) {
+      const set = new Set([ID]);
+      const queue = [keyToPerm(ID)];
+      for (const g of gens) {
+        set.add(permToKey(g));
+        set.add(permToKey(inverse(g)));
+        queue.push(g, inverse(g));
+      }
+      while (queue.length) {
+        const a = queue.shift();
+        const current = [...set].map(keyToPerm);
+        for (const b of current) {
+          for (const c of [compose(a,b), compose(b,a)]) {
+            const k = permToKey(c);
+            if (!set.has(k)) {
+              set.add(k);
+              queue.push(c);
+            }
+          }
+        }
+      }
+      return set;
+    }
+
+    function setKey(set) {
+      return [...set].sort().join('|');
+    }
+
+    function isSubset(A, B) {
+      for (const x of A) if (!B.has(x)) return false;
+      return true;
+    }
+
+    function subgroupName(H) {
+      const elems = [...H].sort();
+      const order = H.size;
+      if (order === 1) return '{e}';
+      if (order === 24) return 'S₄';
+      const even = elems.every(k => sign(keyToPerm(k)) === 1);
+      if (order === 12 && even) return 'A₄';
+      const doubleTranspositions = ['2143','3412','4321']; // (12)(34), (13)(24), (14)(23) in one-line notation
+      const isNormalV4 = order === 4 && doubleTranspositions.every(k => H.has(k));
+      if (isNormalV4) return 'V₄';
+
+      const nonId = elems.filter(k => k !== ID).map(k => cycles(keyToPerm(k)));
+      if (order === 2) return '⟨' + nonId[0] + '⟩';
+      if (order === 3) return 'C₃';
+      if (order === 4) {
+        const has4 = elems.some(k => cycles(keyToPerm(k)).replace(/[^0-9]/g,'').length === 4 && cycles(keyToPerm(k)).startsWith('('));
+        return has4 ? 'C₄' : 'V₄';
+      }
+      if (order === 6) return 'S₃';
+      if (order === 8) return 'D₄';
+      return 'H';
+    }
+
+    function subgroupType(H) {
+      const order = H.size;
+      if (order === 1) return 'trivial';
+      if (order === 24) return 'total';
+      const even = [...H].every(k => sign(keyToPerm(k)) === 1);
+      if (order === 12 && even) return 'A₄';
+      if (order === 8) return 'D₄, Sylow 2';
+      if (order === 6) return 'S₃, stabilisateur d’un point';
+      if (order === 4) {
+        const allNonIdOrder2 = [...H].filter(k => k !== ID).every(k => elementOrder(keyToPerm(k)) === 2);
+        if (allNonIdOrder2) return 'V₄';
+        return 'C₄';
+      }
+      if (order === 3) return 'C₃';
+      if (order === 2) {
+        const c = cycles(keyToPerm([...H].find(k => k !== ID)));
+        return c.includes(')(') ? 'C₂, double transposition' : 'C₂, transposition';
+      }
+      return '—';
+    }
+
+    function elementOrder(p) {
+      let x = [1,2,3,4];
+      for (let n = 1; n <= 12; n++) {
+        x = compose(p, x);
+        if (permToKey(x) === ID) return n;
+      }
+      return NaN;
+    }
+
+    function isNormal(H, G) {
+      for (const gk of G) {
+        const g = keyToPerm(gk);
+        const gi = inverse(g);
+        for (const hk of H) {
+          const h = keyToPerm(hk);
+          const conj = permToKey(compose(compose(g,h),gi));
+          if (!H.has(conj)) return false;
+        }
+      }
+      return true;
+    }
+
+    function findSmallGenerators(H) {
+      if (H.size === 1) return [];
+      const elems = [...H].filter(k => k !== ID).map(keyToPerm);
+      for (const g of elems) if (closure([g]).size === H.size && isSubset(closure([g]), H)) return [g];
+      for (let i = 0; i < elems.length; i++) {
+        for (let j = i + 1; j < elems.length; j++) {
+          const C = closure([elems[i], elems[j]]);
+          if (C.size === H.size && isSubset(C, H)) return [elems[i], elems[j]];
+        }
+      }
+      return elems.slice(0, 3);
+    }
+
+    function buildSubgroups() {
+      const map = new Map();
+      const elems = ALL;
+      map.set(setKey(new Set([ID])), new Set([ID]));
+      map.set(setKey(new Set(elems.map(permToKey))), new Set(elems.map(permToKey)));
+      for (const g of elems) {
+        const H = closure([g]);
+        map.set(setKey(H), H);
+      }
+      for (let i = 0; i < elems.length; i++) {
+        for (let j = i + 1; j < elems.length; j++) {
+          const H = closure([elems[i], elems[j]]);
+          map.set(setKey(H), H);
+        }
+      }
+
+      const G = new Set(elems.map(permToKey));
+      subgroups = [...map.values()].map((set, idx) => {
+        const gens = findSmallGenerators(set);
+        return {
+          id: 'H' + idx,
+          set,
+          order: set.size,
+          label: subgroupName(set),
+          type: subgroupType(set),
+          normal: isNormal(set, G),
+          generators: gens.map(cycles),
+          elements: [...set].sort().map(k => cycles(keyToPerm(k)))
+        };
+      });
+
+      subgroups.sort((a,b) => a.order - b.order || a.label.localeCompare(b.label));
+      subgroups.forEach((h, i) => h.id = 'H' + i);
+
+      covers = [];
+      for (const A of subgroups) {
+        for (const B of subgroups) {
+          if (A.id === B.id || A.order >= B.order) continue;
+          if (!isSubset(A.set, B.set)) continue;
+          const intermediate = subgroups.some(C =>
+            C.id !== A.id && C.id !== B.id &&
+            A.order < C.order && C.order < B.order &&
+            isSubset(A.set, C.set) && isSubset(C.set, B.set)
+          );
+          if (!intermediate) covers.push([A.id, B.id]);
+        }
+      }
+    }
+
+    function layout() {
+      const width = 1200;
+      const height = 760;
+      const topPad = 55;
+      const bottomPad = 55;
+      const levels = [1,2,3,4,6,8,12,24];
+      const positions = new Map();
+      const byOrder = new Map();
+      for (const o of levels) byOrder.set(o, []);
+      for (const H of subgroups) byOrder.get(H.order).push(H);
+      for (const order of levels) {
+        const nodes = byOrder.get(order);
+        const level = levels.indexOf(order);
+        const y = height - bottomPad - level * ((height - topPad - bottomPad) / (levels.length - 1));
+        const usable = width - 100;
+        const start = 50;
+        nodes.forEach((H, i) => {
+          const x = nodes.length === 1 ? width / 2 : start + (i + 0.5) * (usable / nodes.length);
+          positions.set(H.id, {x, y});
+        });
+      }
+      return positions;
+    }
+
+    function visible(H) {
+      if (mode === 'normal' && !H.normal) return false;
+      if (mode === 'maximal') {
+        const above = covers.filter(([low]) => low === H.id).map(([, high]) => byId(high));
+        if (!(H.order === 24 || above.some(K => K.order === 24))) return false;
+      }
+      if (orderMode !== 'all' && H.order !== Number(orderMode)) return false;
+      return true;
+    }
+
+    function byId(id) { return subgroups.find(H => H.id === id); }
+
+    function allVisibleInclusions(visibleIds) {
+      const ids = [...visibleIds];
+      const out = [];
+      for (const low of ids) {
+        for (const high of ids) {
+          if (low === high) continue;
+          const A = byId(low);
+          const B = byId(high);
+          if (A.order < B.order && isSubset(A.set, B.set)) out.push([low, high]);
+        }
+      }
+      return out;
+    }
+
+    function visibleCovers(visibleIds) {
+      const adjacency = new Map();
+      subgroups.forEach(H => adjacency.set(H.id, []));
+      covers.forEach(([low, high]) => adjacency.get(low).push(high));
+
+      function reaches(a, b) {
+        if (a === b) return true;
+        const seen = new Set([a]);
+        const stack = [...adjacency.get(a)];
+        while (stack.length) {
+          const x = stack.pop();
+          if (x === b) return true;
+          if (seen.has(x)) continue;
+          seen.add(x);
+          stack.push(...adjacency.get(x));
+        }
+        return false;
+      }
+
+      const ids = [...visibleIds];
+      const out = [];
+      for (const low of ids) {
+        for (const high of ids) {
+          if (low === high) continue;
+          if (!reaches(low, high)) continue;
+          const hasMid = ids.some(mid => mid !== low && mid !== high && reaches(low, mid) && reaches(mid, high));
+          if (!hasMid) out.push([low, high]);
+        }
+      }
+      return out;
+    }
+
+    function render() {
+      svg.innerHTML = '';
+      const pos = layout();
+      const visibleIds = new Set(subgroups.filter(visible).map(H => H.id));
+      const selected = selectedId ? byId(selectedId) : null;
+
+      const edgeList = edgeMode === 'all' ? allVisibleInclusions(visibleIds) : visibleCovers(visibleIds);
+      const hasseSet = new Set(visibleCovers(visibleIds).map(([a,b]) => `${a}|${b}`));
+
+      edgeList.forEach(([low, high]) => {
+        const a = pos.get(low), b = pos.get(high);
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', a.x);
+        line.setAttribute('y1', a.y - 24);
+        line.setAttribute('x2', b.x);
+        line.setAttribute('y2', b.y + 24);
+        const hi = selectedId && (low === selectedId || high === selectedId);
+        const isCover = hasseSet.has(`${low}|${high}`);
+        line.setAttribute('class', hi ? 'edge highlight' : (isCover ? 'edge' : 'edge noncover'));
+        svg.appendChild(line);
+      });
+
+      subgroups.forEach(H => {
+        if (!visible(H)) return;
+        const p = pos.get(H.id);
+        drawNode(H, p.x, p.y);
+      });
+
+      renderSelected(selected);
+      renderNormals();
+      renderStats();
+      updateHint();
+    }
+
+    function drawNode(H, x, y) {
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.setAttribute('class', `node ${H.normal ? 'normal' : ''} ${H.id === selectedId ? 'selected' : ''}`);
+      g.setAttribute('transform', `translate(${x}, ${y})`);
+      g.style.cursor = 'pointer';
+      const label = displayLabel(H);
+      const w = Math.max(86, Math.min(150, 28 + label.length * 8));
+      const h = 52;
+      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rect.setAttribute('x', -w/2);
+      rect.setAttribute('y', -h/2);
+      rect.setAttribute('width', w);
+      rect.setAttribute('height', h);
+      g.appendChild(rect);
+
+      const main = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      main.setAttribute('class', 'label-main');
+      main.setAttribute('x', 0);
+      main.setAttribute('y', -7);
+      main.textContent = label;
+      g.appendChild(main);
+
+      const sub = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      sub.setAttribute('class', 'label-sub');
+      sub.setAttribute('x', 0);
+      sub.setAttribute('y', 14);
+      sub.textContent = `ordre ${H.order}`;
+      g.appendChild(sub);
+
+      g.addEventListener('click', () => { selectedId = H.id; render(); });
+      svg.appendChild(g);
+    }
+
+    function displayLabel(H) {
+      if (H.order === 1 || H.order === 24 || H.label === 'A₄' || H.label === 'V₄') return H.label;
+      if (H.order === 2) return H.generators[0] ? '⟨' + H.generators[0] + '⟩' : H.label;
+      return H.label;
+    }
+
+    function quotientName(H) {
+      if (!H.normal) return 'non défini';
+      if (H.order === 1) return 'S₄';
+      if (H.order === 4) return 'S₃';
+      if (H.order === 12) return 'C₂';
+      if (H.order === 24) return '{e}';
+      return '?';
+    }
+
+    function renderSelected(H) {
+      if (!H) {
+        selectedBadge.textContent = 'aucun';
+        selectedBadge.className = 'badge';
+        selectedTitle.textContent = 'Clique sur une boîte.';
+        selectedTable.innerHTML = '';
+        return;
+      }
+      selectedBadge.textContent = H.normal ? 'distingué' : 'non distingué';
+      selectedBadge.className = H.normal ? 'badge normal' : 'badge warn';
+      selectedTitle.innerHTML = `<span class="formula">${displayLabel(H)}</span>`;
+      const below = covers.filter(([, high]) => high === H.id).map(([low]) => displayLabel(byId(low)));
+      const above = covers.filter(([low]) => low === H.id).map(([, high]) => displayLabel(byId(high)));
+      selectedTable.innerHTML = `
+        <tr><th>Type</th><td>${H.type}</td></tr>
+        <tr><th>Ordre |H|</th><td>${H.order}</td></tr>
+        <tr><th>Indice [S₄:H]</th><td>24/${H.order} = ${24/H.order}</td></tr>
+        <tr><th>Générateurs</th><td>${H.generators.length ? H.generators.join(', ') : '—'}</td></tr>
+        <tr><th>Distingué ?</th><td>${H.normal ? 'oui' : 'non'}</td></tr>
+        <tr><th>Quotient</th><td>${H.normal ? `S₄/${displayLabel(H)} ≃ ${quotientName(H)}` : 'non défini comme groupe'}</td></tr>
+        <tr><th>Immédiatement au-dessous</th><td>${below.length ? below.join(', ') : 'aucun'}</td></tr>
+        <tr><th>Immédiatement au-dessus</th><td>${above.length ? above.join(', ') : 'aucun'}</td></tr>
+        <tr><th>Éléments</th><td>${H.elements.join(', ')}</td></tr>
+      `;
+    }
+
+    function renderNormals() {
+      const normals = subgroups.filter(H => H.normal);
+      normalCount.textContent = `${normals.length}/30`;
+      normalList.innerHTML = '';
+      normals.forEach(H => {
+        const chip = document.createElement('button');
+        chip.className = 'chip';
+        chip.textContent = `${displayLabel(H)} : S₄/H ≃ ${quotientName(H)}`;
+        chip.addEventListener('click', () => { selectedId = H.id; mode = 'all'; orderMode = 'all'; orderFilter.value = 'all'; render(); });
+        normalList.appendChild(chip);
+      });
+    }
+
+    function renderStats() {
+      const counts = new Map();
+      subgroups.forEach(H => counts.set(H.order, (counts.get(H.order) || 0) + 1));
+      orderStats.innerHTML = [...counts.entries()].sort((a,b) => a[0]-b[0]).map(([o,c]) => `ordre ${o} : ${c}`).join('<br>');
+    }
+
+    function updateHint() {
+      allEdgesBtn.textContent = edgeMode === 'hasse' ? 'Toutes les inclusions' : 'Revenir au diagramme de Hasse';
+      if (edgeMode === 'all') hint.textContent = 'Mode toutes les inclusions : les pointillés indiquent des inclusions non immédiates, par exemple {e} ⊂ V₄ lorsqu’il existe des C₂ intermédiaires.';
+      else if (mode === 'normal') hint.textContent = 'Mode distingués : seuls {e}, V₄, A₄ et S₄ sont affichés ; les arêtes sont reconstruites entre les sous-groupes visibles.';
+      else if (mode === 'maximal') hint.textContent = 'Mode maximaux : affichage de S₄ et des sous-groupes maximaux propres, c’est-à-dire A₄, les quatre S₃ et les trois D₄.';
+      else if (orderMode !== 'all') hint.textContent = `Filtre par ordre : seuls les sous-groupes d’ordre ${orderMode} sont affichés.`;
+      else hint.textContent = 'Clique sur un sous-groupe pour voir son ordre, son indice, ses générateurs, ses éléments, ses inclusions immédiates et le quotient éventuel.';
+    }
+
+    function init() {
+      buildSubgroups();
+      const orders = [...new Set(subgroups.map(H => H.order))].sort((a,b) => a-b);
+      orders.forEach(o => {
+        const opt = document.createElement('option');
+        opt.value = String(o);
+        opt.textContent = `Ordre ${o}`;
+        orderFilter.appendChild(opt);
+      });
+      resetBtn.addEventListener('click', () => { mode = 'all'; orderMode = 'all'; orderFilter.value = 'all'; selectedId = null; edgeMode = 'hasse'; render(); });
+      normalBtn.addEventListener('click', () => { mode = mode === 'normal' ? 'all' : 'normal'; orderMode = 'all'; orderFilter.value = 'all'; render(); });
+      maximalBtn.addEventListener('click', () => { mode = mode === 'maximal' ? 'all' : 'maximal'; orderMode = 'all'; orderFilter.value = 'all'; render(); });
+      allEdgesBtn.addEventListener('click', () => { edgeMode = edgeMode === 'hasse' ? 'all' : 'hasse'; render(); });
+      orderFilter.addEventListener('change', () => { orderMode = orderFilter.value; mode = 'all'; selectedId = null; render(); });
+      render();
+    }
+
+    init();
+  </script>
+</body>
+</html>
